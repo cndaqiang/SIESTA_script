@@ -1,0 +1,73 @@
+# General System descriptors
+SystemName H2O   # Descriptive name of the system
+SystemLabel           H2O           # Short name for naming files 
+
+#=========Init============================= 
+#Spin     none   #page 49 #precedence over SpinOrbit NonCollinearSpin SpinPolarized
+SolutionMethod diagon  #diagon Order-N tdap2.0 is evolve
+SlabDipoleCorrection True
+#=======Exchange-correlation functionals
+xc.functional   GGA #  LDA    GGA VDW                                                                          
+xc.authors     PBE   #  CA PW92: PW91 PBE revPBE RPPBE WC ...   
+MeshCutoff    300 Ry  #(real energy): Deﬁnes the plane wave cutoﬀ for the grid. Default value: 100 Ry
+
+
+#======relaxation  only compatible with  CG(ALL) or Broyden ;Page 108======================
+MD.TypeOfRun CG   #CG; Broyden(Coordinate No atomic) ; Verlet NVE tdap ;Nose NVT ;...
+#MD.VariableCell false #true cell coordinate and atoms 
+#MD.ConstantVolume false #
+#MD.RelaxCellOnly false #only Broyden or fire
+MD.MaxForceTol 0.04 eV/Ang #atom
+#MD.MaxStressTol 1 Gpa #cell
+MD.NumCGsteps 100 # Max step
+MD.MaxCGDispl 0.2 Bohr #move atom distance
+
+DM.AllowExtrapolation   F # maybe harm for TDAP ;useful for MD (logical): Controlswhetherthedensitymatrixinformationfromseveral previous geometry iterations is extrapolated to start the new geometry’s SCF cycle. This featureisusefulformoleculardynamicssimulationsandpossiblyalsoforgeometryrelaxations. The number of geometry steps saved is controlled by the variable DM.History.Depth Default values: .true. for molecular-dynamics simulations, but .false. for now for geometry-relaxations (pending further tests which users are kindly requested to perform). DM.History.Depth (integer): Sets the number of geometry steps for which density-matrix information is saved for extrapolation.
+DM.AllowReuse           T # (logical): Controls whether density matrix information from previous geometry iterations is re-used to start the new geometry’s SCF cycle
+
+#=========SCF ==============================
+#==converge
+SCFMustConverge   T    #if T & not converge in 1st MD then stop ;F update force ,carry on 
+
+MaxSCFIterations  200   # Max step in SCF
+
+DM.Tolerance 1E-5  #scf-consistency element in DM small than it 
+
+#DM.Require.Energy.Convergence F #Energy cenvergence
+#DM.Energy.Toleranc 1E-4 eV #eV
+#==mix 
+DM.MixingWeight 0.3 #a for liner mix pi2=a*po1+(1-a)*pi1
+DM.NumberPulay 5  #Number po1=N(po1+po0+po-1+...) pi1=N(pi1+pi0+pi-1+...)
+
+#=========write control========
+XML.Write false
+WriteMDHistory .true.
+LongOutput
+WriteDenchar T
+SaveRho       T
+#WriteHirshfeldPop T
+#PartialChargesAtEveryGeometry T
+
+
+#========structure===========
+%include structure.fdf
+#========k-sample=============================
+%block kgrid_Monkhorst_Pack
+1 0 0 0.0
+0 1 0 0.0
+0 0 1 0.0
+%endblock kgrid_Monkhorst_Pack
+
+
+#======Electronic structure============
+#%block BandLines
+#1 1.0 1.0 1.0 L
+#20 0.0 0.0 0.0 \Gamma  #L->G:20points
+#25 2.0 0.0 0.0 X       #G-X:25points
+#%endblock BandLines
+
+#%block ProjectedDensityOfStates
+#-20.0 10.0 0.2 500 eV
+#%endblock ProjectedDensityOfStates
+
+
