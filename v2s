@@ -13,7 +13,7 @@ else
 echo "read fome POSCAR"
 INPUTFILE=POSCAR
 fi 
-
+Pseudopotentials=/home/cndaqiang/TDAP/psf/GGA
 dos2unix $INPUTFILE ||
 echo "Please make sure your input file is unix type"
 
@@ -54,6 +54,7 @@ for i in $(sed -n 6p $INPUTFILE)
 do
 ((NumberOfSpecies++))
 Atom_Lable[$NumberOfSpecies]=$i  #元素的化学符号
+cp $Pseudopotentials/${i}.psf .   #复制GGA赝势
 done
 
 AtomicCoordinatesFormat=$(sed -n 8p $INPUTFILE | awk '{printf "%.1s\n",$1}') #坐标系类型
