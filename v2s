@@ -1,0 +1,96 @@
+#!/bin/bash
+################################################
+#####  Author:cndaqiang  #######################
+#####  Blog:https://cndaqiang.github.io  #######
+#####  Email:chendq@aliyun.com  ################
+################################################
+
+OUTFILE=structure.fdf #siesta.fdf
+if [ $1 ]
+then
+INPUTFILE=$1
+else
+echo "read fome POSCAR"
+INPUTFILE=POSCAR
+fi 
+
+dos2unix $INPUTFILE ||
+echo "Please make sure your input file is unix type"
+
+#======init================
+declare -A CarOrFrac
+CarOrFrac["c"]="ScaledCartesian"
+CarOrFrac["C"]="ScaledCartesian"
+CarOrFrac["d"]="Fractional"
+CarOrFrac["D"]="Fractional"
+declare -A SpeciesOrder
+Species=( H       He      Li      Be      B       C       N       O       F       Ne      Na      Mg      Al      Si
+P       S       Cl      Ar      K       Ca      Sc      Ti      V       Cr      Mn      Fe      Co      Ni
+Cu      Zn      Ga      Ge      As      Se      Br      Kr      Rb      Sr      Y       Zr      Nb      Mo
+Tc      Ru      Rh      Pd      Ag      Cd      In      Sn      Sb      Te      I       Xe      Cs      Ba
+La      Ce      Pr      Nd      Pm      Sm      Eu      Gd      Tb      Dy      Ho      Er      Tm      Yb
+Lu      Hf      Ta      W       Re      Os      Ir      Pt      Au      Hg      Tl      Pb      Bi      Po
+At      Rn      Fr      Ra      Ac      Th      Pa      U       Np      Pu      Am      Cm      Bk      Cf
+Es      Fm      Md      No      Lr)
+Order=1
+for i in ${Species[@]}
+do
+SpeciesOrder[$i]=$Order
+((Order++))
+done
+
+LatticeConstant=$(sed -n 2p $INPUTFILE | awk '{printf "%f\n",$1}')
+NumberOfSpecies=0
+NumberOfAtoms=0
+for i in $(sed -n 7p $INPUTFILE)
+do
+((NumberOfSpecies++))
+Atom_N[$NumberOfSpecies]=$i  #每种元素的原子数
+NumberOfAtoms=`echo "$NumberOfAtoms+$i"|bc` #总原子数
+done
+
+NumberOfSpecies=0
+for i in $(sed -n 6p $INPUTFILE)
+do
+((NumberOfSpecies++))
+Atom_Lable[$NumberOfSpecies]=$i  #元素的化学符号
+done
+
+AtomicCoordinatesFormat=$(sed -n 8p $INPUTFILE | awk '{printf "%.1s\n",$1}') #坐标系类型
+
+echo -e "LatticeConstant\t$LatticeConstant\tAng" > $OUTFILE
+echo "%block LatticeVectors" >> $OUTFILE
+sed -n 3,5p $INPUTFILE >> $OUTFILE
+echo "%endblock LatticeVectors" >> $OUTFILE
+echo -e "NumberOfAtoms\t$NumberOfAtoms" >> $OUTFILE
+echo -e "NumberOfSpecies\t$NumberOfSpecies" >> $OUTFILE
+echo "%block Chemical_Species_Label" >> $OUTFILE
+for i in $(seq 1 $NumberOfSpecies )
+do
+    Lable=${Atom_Lable[i]}
+    echo -e "\t$i\t${SpeciesOrder[$Lable]}\t$Lable"  >> $OUTFILE
+done
+echo "%endblock Chemical_Species_Label" >> $OUTFILE
+echo -e "AtomicCoordinatesFormat\t${CarOrFrac[$AtomicCoordinatesFormat]}" >> $OUTFILE
+echo "%block AtomicCoordinatesAndAtomicSpecies" >> $OUTFILE
+
+N=9
+for i in  $(seq 1 $NumberOfSpecies )
+do
+    Lable=${Atom_Lable[i]}
+    for j in $(seq 1 ${Atom_N[$i]})
+    do
+        Coordinate=$( sed -n ${N}p $INPUTFILE | awk '{printf "%.10f\t%.10f\t%.10f\n",$1,$2,$3}')
+        echo -e "$Coordinate\t$i\t$j\t$Lable" >> $OUTFILE
+        ((N++))
+    done
+done
+echo "%endblock AtomicCoordinatesAndAtomicSpecies" >> $OUTFILE
+
+
+
+
+
+
+
+

@@ -1,0 +1,48 @@
+#!/bin/bash
+################################################
+#####  Author:cndaqiang  #######################
+#####  Blog:https://cndaqiang.github.io  #######
+#####  Email:chendq@aliyun.com  ################
+################################################
+
+
+declare -A CarOrFrac
+CarOrFrac["S"]="Direct"  #"Cartesian"
+CarOrFrac["F"]="Direct"
+CarOrFrac["s"]="Direct"  #"Cartesian"
+CarOrFrac["f"]="Direct"
+
+
+SystemLabel=$(grep "SystemLabel" input.fdf |awk '{printf "%s\n",$2}')
+INPUTFILE=$SystemLabel.STRUCT_OUT
+STRUCTURE=structure.fdf
+
+
+OUTFILE=siesta.vasp
+
+LatticeConstant=$(grep "LatticeConstant" $STRUCTURE |awk '{printf "%s\n",$2}')
+NumberOfSpecies=$(grep "NumberOfSpecies" $STRUCTURE |awk '{printf "%s\n",$2}')
+NumberOfAtoms=$(grep "NumberOfAtoms" $STRUCTURE |awk '{printf "%s\n",$2}')
+N=10
+for i in $(seq 1 $NumberOfSpecies)
+do
+    Chemical_Species_Label[$i]=$(sed -n ${N}p $STRUCTURE | awk '{printf "%s\n",$3}')
+    Atom_N[$i]=$(sed -n ${N}p $STRUCTURE | awk '{printf "%d\n",$1}')
+    ((N++))
+done
+
+AtomicCoordinatesFormat=$(grep "AtomicCoordinatesFormat" $STRUCTURE |awk '{printf "%.1s\n",$2}')
+
+echo $SystemLabel > $OUTFILE
+echo $LatticeConstant >> $OUTFILE
+sed -n 1,3p $INPUTFILE >> $OUTFILE
+echo -e "\t${Chemical_Species_Label[@]}" >> $OUTFILE
+echo -e "\t${Atom_N[@]}" >> $OUTFILE
+echo -e "${CarOrFrac[$AtomicCoordinatesFormat]}" >> $OUTFILE
+N=5
+for i in $(seq 1 $NumberOfAtoms)
+do
+    Coordinate=$( sed -n ${N}p $INPUTFILE | awk '{printf "%.10f\t%.10f\t%.10f\n",$3,$4,$5}')
+    echo -e "$Coordinate" >> $OUTFILE
+    ((N++))
+done
