@@ -1,9 +1,9 @@
-#!/bin/bash
-################################################
-#####  Author:cndaqiang  #######################
-#####  Blog:https://cndaqiang.github.io  #######
-#####  Email:chendq@aliyun.com  ################
-################################################
+##################################
+# Author : cndaqiang             #
+# Update : 2019-04-11            #
+# Build  : 2019-04-11            #
+# What   : SIESTA结构转VASP      #
+#################################
 
 
 declare -A CarOrFrac
@@ -23,11 +23,17 @@ OUTFILE=siesta.vasp
 LatticeConstant=$(grep "LatticeConstant" $STRUCTURE |awk '{printf "%s\n",$2}')
 NumberOfSpecies=$(grep "NumberOfSpecies" $STRUCTURE |awk '{printf "%s\n",$2}')
 NumberOfAtoms=$(grep "NumberOfAtoms" $STRUCTURE |awk '{printf "%s\n",$2}')
+#第10行开始出现原子标签
+#开始逐行读取，N行号
 N=10
 for i in $(seq 1 $NumberOfSpecies)
 do
     Chemical_Species_Label[$i]=$(sed -n ${N}p $STRUCTURE | awk '{printf "%s\n",$3}')
-    Atom_N[$i]=$(sed -n ${N}p $STRUCTURE | awk '{printf "%d\n",$1}')
+#此处原子数计算存在风险，如果元素名称中有相同的字母，需要认为修正
+#    Atom_N[$i]=$(sed -n ${N}p $STRUCTURE | awk '{printf "%d\n",$1}') 
+#    Atom_N[$i]=$(grep "${Chemical_Species_Label[$i]}$" $STRUCTURE |tail -1| awk '{printf "%d\n",$5}')
+    Atom_N[$i]=$(grep ${Chemical_Species_Label[$i]} $STRUCTURE | tail -1 | awk '{printf "%d\n",$5}')
+    
     ((N++))
 done
 
