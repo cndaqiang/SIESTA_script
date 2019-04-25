@@ -1,11 +1,13 @@
-#!/bin/bash
-################################################
-#####  Author:cndaqiang  #######################
-#####  Blog:https://cndaqiang.github.io  #######
-#####  Email:chendq@aliyun.com  ################
-################################################
+##################################
+# Author : cndaqiang             #
+# Update : 2019-04-11            #
+# Build  : 2019-04-11            #
+# What   : POSCAR(VASP)转SIESTA  #
+#################################
 
+#!/bin/bash
 OUTFILE=structure.fdf #siesta.fdf
+Pseudopotentials=$HOME/TDAP/psf/GGA
 if [ $1 ]
 then
 INPUTFILE=$1
@@ -13,7 +15,7 @@ else
 echo "read fome POSCAR"
 INPUTFILE=POSCAR
 fi 
-Pseudopotentials=/home/cndaqiang/TDAP/psf/GGA
+
 dos2unix $INPUTFILE ||
 echo "Please make sure your input file is unix type"
 
